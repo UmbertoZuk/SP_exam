@@ -1,0 +1,15 @@
+# Table of contents
+# Learn more at https://jupyterbook.org/customize/toc.html
+
+format: jb-book
+root: intro
+parts:
+  - caption: Exercise 1
+    chapters:
+    - file: Ex_1/SP_ex1
+  - caption: Exercise 2
+    chapters:
+    - file: Ex_2/SP_ex2
+  - caption: Exercise 3
+    chapters:
+    - file: Ex_3/SP_ex3

@@ -1,0 +1,131 @@
+{
+ "cells": [
+  {
+   "cell_type": "code",
+   "execution_count": 1,
+   "id": "ce4b0d15-0854-43a5-b92d-4ca578089ce6",
+   "metadata": {},
+   "outputs": [
+    {
+     "data": {
+      "text/plain": [
+       "'\\nSignal processing exam 2023.\\n\\n06/01/2023\\nUmberto Zucchelli\\n'"
+      ]
+     },
+     "execution_count": 1,
+     "metadata": {},
+     "output_type": "execute_result"
+    }
+   ],
+   "source": [
+    "# -*- coding: utf-8 -*-\n",
+    "\"\"\"\n",
+    "Signal processing exam 2023.\n",
+    "\n",
+    "06/01/2023\n",
+    "Umberto Zucchelli\n",
+    "\"\"\""
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 2,
+   "id": "bc84fcde-c21d-426e-8627-36e9e7f75e70",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "import numpy as np\n",
+    "from scipy import signal\n",
+    "import pandas as pd\n",
+    "import matplotlib.pyplot as plt\n",
+    "from scipy.signal import butter, filtfilt, get_window"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 31,
+   "id": "e800f162-061f-4407-bb55-8475ec8a959a",
+   "metadata": {},
+   "outputs": [],
+   "source": [
+    "def Diff_1st_order(x,y):\n",
+    "    \"\"\" Compute derivatives with backward difference approximation:\n",
+    "    y'(xi) = (y(xi)−y(xi−1)) / Δx \n",
+    "    y''(xi) = (y(xi)−2y(xi−1)+y(xi-2) / Δx^2 \n",
+    "    For the first point (firsts 2 for the 2nd order derivative), \n",
+    "    I use the forward difference approximation that mirrors the expression above \"\"\"\n",
+    "    \n",
+    "    N = x.shape[0]\n",
+    "    \n",
+    "    delta_x = np.empty(N)\n",
+    "    y_prime = np.empty(N) # 1st order derivative\n",
+    "    y_prime2 = np.empty(N) # 2nd order derivative\n",
+    "    # Forward first order differencing approx \n",
+    "    delta_x[0] = x[1] - x[0]\n",
+    "    y_prime[0] = (y[1] - y[0]) / delta_x[0]\n",
+    "    y_prime2[0] = (y[2] - 2*y[1] + y[0]) / delta_x[0]**2\n",
+    "    # Backward first order differencing approx \n",
+    "    for i in range(1, N):\n",
+    "        delta_x[i] = x[i] - x[i-1]\n",
+    "        y_prime[i] = (y[i] - y[i-1]) / delta_x[i]\n",
+    "        if i == 1:\n",
+    "            y_prime2[i] = (y[i+2] - 2*y[i+1] + y[i]) / delta_x[i]**2\n",
+    "        else:\n",
+    "            y_prime2[i] = (y[i] - 2*y[i-1] + y[i-2]) / delta_x[0]**2\n",
+    "        \n",
+    "    # In this way the first two elements will be just the opposite of each other\n",
+    "    # This problem could be addressed in different ways.\n",
+    "    # Some of them:\n",
+    "    # 1) Neglect the first term. Since the firsts elements of the series don't measure \n",
+    "    #    important values\n",
+    "    # 2) Since, in fact, we have the datas for t<5s we could consider them to compute the \n",
+    "    #    backward derivative also at x=t=5s \n",
+    "    \n",
+    "    return y_prime, y_prime2"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 10,
+   "id": "cb82b286-cd9d-441b-9977-be63ba9493d5",
+   "metadata": {},
+   "outputs": [
+    {
+     "name": "stdout",
+     "output_type": "stream",
+     "text": [
+      "Dataset starting from t=5s\n",
+      "       Time   ODS_raw\n",
+      "0      5.00  0.002571\n",
+      "1      5.01 -0.016089\n",
+      "2      5.02 -0.009869\n",
+      "3      5.03 -0.059629\n",
+      "4      5.04  0.070991\n",
+      "...     ...       ...\n",
+      "1496  19.96 -1.396929\n",
+      "1497  19.97 -1.645729\n",
+      "1498  19.98 -1.850989\n",
+      "1499  19.99 -2.062469\n",
+      "1500  20.00 -2.161989\n",
+      "\n",
+      "[1501 rows x 2 columns]\n"
+     ]
+    }
+   ],
+   "source": [
+    "# Import data from Excel file\n",
+    "\n",
+    "# We consider datas only from t=5s onwards\n",
+    "# For this reason we discard the first 500 values\n",
+    "columns = ['Time','ODS_raw']\n",
+    "n = 500\n",
+    "data_raw = pd.read_excel('Signal_raw092.xlsx', \n",
+    "                         header=None, skiprows=n+1, names=columns)\n",
+    "print('Dataset starting from t=5s')\n",
+    "print(data_raw)"
+   ]
+  },
+  {
+   "cell_type": "code",
+   "execution_count": 11,
+   "id": "b8aa4aec-8285-45d6-ba71-cb213cc94
